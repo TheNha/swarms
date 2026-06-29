@@ -1,0 +1,8 @@
+{
+  "name": "swarms",
+  "description": "Multi-agent orchestration skills for Claude Code — dependency-aware planning and parallel task execution",
+  "version": "1.0.0",
+  "author": {
+    "name": "Nguyen The Nha"
+  }
+}
