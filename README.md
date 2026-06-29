@@ -65,24 +65,57 @@ This continues wave by wave until all tasks are complete.
 
 ## Skills
 
-| Skill | Description |
-|-------|-------------|
-| [swarm-planner](./skills/swarm-planner/) | Dependency-aware planning with codebase research, doc fetching, and subagent review |
-| [parallel-task](./skills/parallel-task/) | Wave-based execution with context handoff and work verification |
+| Skill | Slash Command | Description |
+|-------|--------------|-------------|
+| [swarm-planner](./skills/swarm-planner/) | `/swarm-planner` | Dependency-aware planning with codebase research, doc fetching, and subagent review |
+| [parallel-task](./skills/parallel-task/) | `/parallel-task` | Wave-based execution with context handoff and work verification |
+| [parallel-task-spark](./skills/parallel-task-spark/) | `/parallel-task-spark` | Wave-based execution using `sparky` agent role |
+| [super-swarm](./skills/super-swarm/) | `/super-swarm` | Rolling 12-agent pool that ignores dependencies, continuously refills worker slots |
+| [super-swarm-spark](./skills/super-swarm-spark/) | `/super-swarm-spark` | Rolling 12-agent pool using `sparky` agent role |
+| [parallel-task-tmux](./skills/parallel-task-tmux/) | `/parallel-task-tmux` | Dependency-aware parallel execution with live tmux pane visibility |
+| [co-design](./skills/co-design/) | `/co-design` | Parallel task executor that routes frontend/design tasks to Claude CLI print mode |
 
 ## Installation
 
-### Claude Code
+### Via npm (Claude Code & Codex)
 
 ```bash
 npx skills add am-will/swarms
 ```
 
-### Codex
+### Via Claude Plugin (Claude Code)
+
+This repository includes a Claude plugin at `.claude/plugins/swarms/` that registers all skills at once.
+
+#### From local path (development)
 
 ```bash
-npx skills add am-will/swarms
+# Thêm marketplace từ local path
+/plugin marketplace add ./swarms
+
+# Cài plugin
+/plugin install swarms@swarms
 ```
+
+#### From GitHub (production)
+
+```bash
+# Clone this repository
+git clone https://github.com/am-will/swarms.git
+cd swarms
+
+# Install the plugin
+mkdir -p ~/.claude/plugins
+cp -r .claude/plugins/swarms ~/.claude/plugins/swarms
+```
+
+Or use the bundled install script:
+
+```bash
+bash .claude/plugins/swarms/scripts/install.sh
+```
+
+### Codex Configuration
 
 **Required: Enable Subagents**
 
@@ -124,7 +157,7 @@ The swarm-planner skill works best when used in PLAN Mode. If you don't have pla
 3. Answer any questions it asks during the planning
 4. At the end of the plan, when it asks you if you want to implement this plan, press Esc
 5. Switch out of Plan Mode by pressing SHIFT+TAB
-6. SAVE THE PLAN to your repo. [feature/product]-plan.md
+6. SAVE THE PLAN to your repo — the planner saves it automatically to `plans/YYYY-MM-DD-HH-MM-topic/plan.md`
 7. Continue on to Execution phase
 ```
 
@@ -143,16 +176,22 @@ The planner will:
 3. Ask clarifying questions (with recommendations) when ambiguity exists
 4. Generate a plan with explicit task dependencies
 5. Spawn a subagent to review for gaps
-6. Save to `<topic>-plan.md`
+6. Save to `plans/YYYY-MM-DD-HH-MM-topic/plan.md`
 
 **NOTE: Codex in Plan Mode cannot save the plan to a file. Esc out, switch to Code Mode, and ask it to save the file to your repo. Proceed to execution**
 
 ### Execution
 
-To run the swarms, simply say implement the @plan.md with the $parallel-task skill.
+To run the swarms, point the execution skill to the plan index file:
 
 ```
 Prompt: Run the plan with the $parallel-task skill
+```
+
+The execution skill reads `plan.md`, extracts the `plan_file` reference, and loads the detailed plan from `phase-01-[summary].md` for full task context.
+
+```
+/parallel-task plans/2024-01-15-10-30-auth/plan.md
 ```
 
 ## Dependency Format
@@ -206,16 +245,18 @@ The `status`, `log`, and `files` fields are updated by subagents as work complet
 
 [researches codebase, fetches Express/Passport/JWT docs]
 [asks: "JWT or session-based? Where should tokens be stored?"]
-[generates auth-plan.md with 8 dependency-ordered tasks]
+[saves plan to plans/2024-01-15-10-30-auth/plan.md + phase-01-auth.md]
 [subagent reviews plan, suggests adding rate limiting task]
 [updates plan, saves]
 
 User: looks good, execute it
 
-> /parallel-task auth-plan.md
+> /parallel-task plans/2024-01-15-10-30-auth/plan.md
 -or-
 > execute the plan using parallel task skill
- 
+
+The execution skill reads plan.md, loads full details from phase-01-auth.md, then:
+
 Wave 1: Launching T1 (user schema), T2 (install packages) in parallel...
   T1 complete - committed, plan updated
   T2 complete - committed, plan updated
