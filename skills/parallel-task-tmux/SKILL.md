@@ -15,9 +15,11 @@ Use this skill when you want:
 
 ## Execution Model
 
-1. Read the plan index (`plan.md`), extract the `plan_file` reference, and read the detailed plan from that file.
-2. If the plan is NOT a master index (it contains full task details), use it directly as the detailed plan.
-3. Compute unblocked tasks by `depends_on`.
+1. Read the plan index (`plan.md`) and parse the Tasks table.
+2. For each task row, extract the `plan_file` column (the per-task phase file path).
+3. If a task row has no `plan_file` column (legacy plan), fall back to a single `plan_file` reference at the top of `plan.md`.
+4. If the plan is NOT a master index (it contains full task details inline), use it directly.
+5. Compute unblocked tasks by `depends_on`.
 4. Build one worker prompt file per task.
 5. Launch one tmux pane per task via `scripts/tmux_spawn_worker.sh`.
 6. Monitor status/logs and reap completed panes via `scripts/tmux_reap_completed.sh`.
@@ -58,9 +60,8 @@ mkdir -p "$RUN_ROOT/prompts" "$RUN_ROOT/logs"
 ## Plan Parsing and Scheduling
 
 Mirror `parallel-task` behavior:
-- Read the plan index, extract `plan_file`, then read the detailed plan.
-- Parse task sections (for example `### T1:`).
-- Extract task id, title, `depends_on`, location, description, acceptance criteria, validation.
+- Read the plan index (`plan.md`) and parse the Tasks table.
+- Extract per task: id, title, `depends_on`, location, `plan_file` (per-task phase file path), status.
 - Filter to requested subset and required dependencies if the user passes a subset.
 - Launch only tasks whose dependencies are complete.
 
@@ -69,8 +70,11 @@ Mirror `parallel-task` behavior:
 Create one prompt file per task at:
 - `$RUN_ROOT/prompts/<TASK_ID>.md`
 
+Include in each prompt:
+- `Phase file (your task detail): [plan_file path for this task]` — the worker must read this file first
+
 Use the same task context and completion requirements as `parallel-task`:
-- Read the working plan and relevant files before coding.
+- Read the phase file (`plan_file`) for this task before coding.
 - Default to TDD RED phase first using a `tdd_test_writer` subagent, or explicitly record `reason_not_testable` with an alternative verification contract.
 - Treat RED-phase tests (or approved non-testable verification plan) as the implementation contract.
 - Implement acceptance criteria.
