@@ -15,12 +15,14 @@ Use this skill when you want:
 
 ## Execution Model
 
-1. Parse the plan and compute unblocked tasks by `depends_on`.
-2. Build one worker prompt file per task.
-3. Launch one tmux pane per task via `scripts/tmux_spawn_worker.sh`.
-4. Monitor status/logs and reap completed panes via `scripts/tmux_reap_completed.sh`.
-5. Validate completed tasks before advancing to the next dependency wave.
-6. Repeat until all requested tasks are complete.
+1. Read the plan index (`plan.md`), extract the `plan_file` reference, and read the detailed plan from that file.
+2. If the plan is NOT a master index (it contains full task details), use it directly as the detailed plan.
+3. Compute unblocked tasks by `depends_on`.
+4. Build one worker prompt file per task.
+5. Launch one tmux pane per task via `scripts/tmux_spawn_worker.sh`.
+6. Monitor status/logs and reap completed panes via `scripts/tmux_reap_completed.sh`.
+7. Validate completed tasks before advancing to the next dependency wave.
+8. Repeat until all requested tasks are complete.
 
 ## Preflight
 
@@ -56,6 +58,7 @@ mkdir -p "$RUN_ROOT/prompts" "$RUN_ROOT/logs"
 ## Plan Parsing and Scheduling
 
 Mirror `parallel-task` behavior:
+- Read the plan index, extract `plan_file`, then read the detailed plan.
 - Parse task sections (for example `### T1:`).
 - Extract task id, title, `depends_on`, location, description, acceptance criteria, validation.
 - Filter to requested subset and required dependencies if the user passes a subset.
@@ -183,7 +186,7 @@ tmux kill-session -t "$SESSION_NAME"
 ## Example Usage
 
 ```text
-/parallel-task-tmux plan.md
+/parallel-task-tmux plans/YYYY-MM-DD-HH-MM-topic/plan.md
 /parallel-task-tmux ./plans/auth-plan.md T1 T2 T4
 /parallel-task-tmux user-profile-plan.md --tasks T3 T7
 ```

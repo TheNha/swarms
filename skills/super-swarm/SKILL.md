@@ -1,7 +1,7 @@
 ---
 name: super-swarm
 description: >
-  Only to be triggered by explicit super-swarm commands. 
+  Only to be triggered by explicit super-swarm commands.
 ---
 
 # Parallel Task Executor (Rolling 12-Agent Pool)
@@ -24,20 +24,23 @@ Primary orchestration goals:
 ### Step 1: Parse Request
 
 Extract from user request:
-1. **Plan file**: The markdown plan to read
+1. **Plan index**: The markdown plan index to read
 2. **Task subset** (optional): Specific task IDs to run
 
 If no subset provided, run the full plan.
 
-### Step 2: Read & Parse Plan
+### Step 2: Read & Parse Plan Index
 
-1. Find task subsections (e.g., `### T1:` or `### Task 1.1:`)
-2. For each task, extract:
+1. Find the `plan_file` reference in the plan index (the `plan.md` master index)
+2. Read the `plan_file` to get the full detailed plan with complete task descriptions
+3. If the plan is NOT a master index (it contains full task details), use it directly as the detailed plan
+4. Find task subsections (e.g., `### T1:` or `### Task 1.1:`)
+5. For each task, extract:
    - Task ID and name
    - Task linkage metadata for context only
    - Full content (description, location, acceptance criteria, validation)
-3. Build task list
-4. If a task subset was requested, filter to only those IDs.
+6. Build task list
+7. If a task subset was requested, filter to only those IDs.
 
 ### Step 3: Build Context Pack Per Task
 
@@ -74,6 +77,7 @@ You are implementing a specific task from a development plan.
 
 ## Context
 - Plan: [filename]
+- Plan Directory: [directory containing the plan files]
 - Goals: [relevant overview from plan]
 - Task relationships: [related metadata for awareness only, never as a blocker]
 - Canonical folders: [exact folders to use]
@@ -180,7 +184,7 @@ Completion bar:
 
 ```
 'Implement the plan using super-swarm'
-/super-swarm plan.md
+/super-swarm plans/YYYY-MM-DD-HH-MM-topic/plan.md
 /super-swarm ./plans/auth-plan.md T1 T2 T4
 /super-swarm user-profile-plan.md --tasks T3 T7
 ```
