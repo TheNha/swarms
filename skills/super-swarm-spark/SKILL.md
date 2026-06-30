@@ -31,16 +31,16 @@ If no subset provided, run the full plan.
 
 ### Step 2: Read & Parse Plan Index
 
-1. Find the `plan_file` reference in the plan index (the `plan.md` master index)
-2. Read the `plan_file` to get the full detailed plan with complete task descriptions
-3. If the plan is NOT a master index (it contains full task details), use it directly as the detailed plan
-4. Find task subsections (e.g., `### T1:` or `### Task 1.1:`)
-5. For each task, extract:
+1. Read the `plan.md` master index
+2. Parse the Tasks table to extract for each task:
    - Task ID and name
+   - **plan_file** path (the per-task phase file, e.g. `plans/…/phase-01-setup.md`)
    - Task linkage metadata for context only
-   - Full content (description, location, acceptance criteria, validation)
-6. Build task list
-7. If a task subset was requested, filter to only those IDs.
+   - Location and status
+3. If a task row has no `plan_file` column (legacy plan), fall back to reading a single `plan_file` reference at the top of `plan.md` for all tasks
+4. If the plan is NOT a master index (it contains full task details inline), use it directly
+5. Build task list
+6. If a task subset was requested, filter to only those IDs.
 
 ### Step 3: Build Context Pack Per Task
 
@@ -81,6 +81,7 @@ You are implementing a specific task from a development plan.
 ## Context
 - Plan: [filename]
 - Plan Directory: [directory containing the plan files]
+- Phase file (your task detail): [plan_file path for this task]
 - Goals: [relevant overview from plan]
 - Task relationships: [related metadata for awareness only, never as a blocker]
 - Canonical folders: [exact folders to use]
@@ -104,17 +105,18 @@ Validation:
 
 ## Instructions
 - Use the `sparky` agent role for this task; do not use any other role.
-1. Examine the plan and all listed canonical paths before editing
+1. Read the phase file (`[plan_file path]`) for full task details before coding.
+2. Examine all listed canonical paths before editing
 2. Implement changes for all acceptance criteria
 3. Keep work atomic and committable
 4. For each file: read first, edit carefully, preserve formatting
 5. Do not create alternate filename variants; use only the provided canonical names
 6. If you need to touch/create a path not listed, stop and report it first
 7. Run validation if feasible
-8. ALWAYS mark completed tasks IN THE *-plan.md file AS SOON AS YOU COMPLETE IT! and update with:
-   - Concise work log
-   - Files modified/created
-   - Errors or gotchas encountered
+8. ALWAYS update BOTH AS SOON AS YOU COMPLETE IT:
+   - The task row in `plan.md` (status → Completed)
+   - The `**status**`, `**log**`, and `**files edited/created**` fields in your phase file (`[plan_file path]`)
+   Include: concise work log, files modified/created, errors or gotchas encountered
 9. Commit your work
    - Note: There are other agents working in parallel to you, so only stage and commit the files you worked on. NEVER PUSH. ONLY COMMIT.
 10. Double check that you updated the *-plan.md file and committed your work before yielding

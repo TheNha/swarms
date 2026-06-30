@@ -27,13 +27,16 @@ Plans are saved into an organized directory structure:
 ```
 plans/
   YYYY-MM-DD-HH-MM-topic/
-    plan.md              ← master index (task summary + plan_file references)
-    phase-01-[summary].md ← full detailed plan (where execution happens)
+    plan.md                   ← master index (task summary + plan_file per task)
+    phase-01-[summary].md     ← detailed plan for T1
+    phase-02-[summary].md     ← detailed plan for T2
+    phase-03-[summary].md     ← detailed plan for T3
+    ...                       ← one file per task
 ```
 
 - **Directory name**: `plans/YYYY-MM-DD-HH-MM-[topic-slug]` (timestamp + kebab-case topic)
-- **`plan.md`**: Master index with task summaries, `plan_file` paths, and execution metadata
-- **`phase-01-[summary].md`**: Full detailed plan with complete task descriptions, acceptance criteria, and validation steps
+- **`plan.md`**: Master index with task summaries; each task entry includes a `**plan_file**` field pointing to its phase file
+- **`phase-NN-[summary].md`**: Detailed plan for one specific task — descriptions, acceptance criteria, validation, and context. Execution agents read this file for full task details.
 
 ## Process
 
@@ -72,21 +75,63 @@ Create the timestamped directory: `plans/YYYY-MM-DD-HH-MM-[topic-slug]/`
 **`YYYY-MM-DD-HH-MM`** = current datetime in UTC (24h format)
 **`topic-slug`** = kebab-case summary of the topic (e.g., `auth`, `user-dashboard`, `payment-integration`)
 
-#### Write `phase-01-[summary].md` (Detailed Plan)
+#### Write One `phase-NN-[summary].md` Per Task
 
-This is the **authoritative** plan file. Execution skills read this file for full task details. Include:
+Each task gets its **own phase file**. This is the file that execution agents read for full task details.
+
+- File naming: `phase-01-[task-slug].md`, `phase-02-[task-slug].md`, etc. (sequential, one per task)
+- `[task-slug]` = kebab-case name of the task (e.g., `setup-db`, `auth-middleware`, `add-api-endpoints`)
+
+Template for each phase file:
 
 ```markdown
-# Plan: [Full Topic Name]
+# Phase [NN]: [Task Name]
 
+**Plan**: plans/YYYY-MM-DD-HH-MM-[topic-slug]/plan.md
+**Task ID**: T[N]
 **Generated**: YYYY-MM-DD HH:MM UTC
-**Topic**: [topic-slug]
 
 ## Overview
-[Summary of task and approach]
+[What this task accomplishes and why it matters]
 
-## Prerequisites
-- [Tools, libraries, access needed]
+## Dependencies
+- **depends_on**: [T1, T2] or []
+- [Brief note on what prerequisite tasks provide]
+
+## Location
+[File paths this task touches]
+
+## Description
+[Detailed what to do — enough for an agent to execute without other context]
+
+## Acceptance Criteria
+- [Criterion 1]
+- [Criterion 2]
+
+## Validation
+[How to verify — exact commands or steps]
+
+## Risks & Gotchas
+- [What could go wrong + how to handle]
+
+---
+**status**: Not Completed
+**log**: [leave empty, to be filled out later]
+**files edited/created**: [leave empty, to be filled out later]
+```
+
+#### Write `plan.md` (Master Index)
+
+This is the **entry point** for execution skills. Each task row includes a `**plan_file**` pointing to its phase file.
+
+```markdown
+# Plan Index: [Topic Name]
+
+**Generated**: YYYY-MM-DD HH:MM UTC
+**Plan Directory**: plans/YYYY-MM-DD-HH-MM-[topic-slug]/
+
+## Overview
+[Summary of the overall goal and approach]
 
 ## Dependency Graph
 
@@ -98,70 +143,11 @@ T2 ──┴── T4 ──┘
 
 ## Tasks
 
-### T1: [Name]
-- **depends_on**: []
-- **location**: [file paths]
-- **description**: [detailed what to do]
-- **acceptance_criteria**:
-  - [Criterion 1]
-  - [Criterion 2]
-- **validation**: [how to verify — exact commands or steps]
-- **status**: Not Completed
-- **log**: [leave empty, to be filled out later]
-- **files edited/created**: [leave empty, to be filled out later]
-
-### T2: [Name]
-- **depends_on**: []
-- **location**: [file paths]
-- **description**: [detailed what to do]
-- **acceptance_criteria**:
-  - [Criterion 1]
-- **validation**: [how to verify]
-- **status**: Not Completed
-- **log**: [leave empty, to be filled out later]
-- **files edited/created**: [leave empty, to be filled out later]
-
-[... continue for all tasks ...]
-
-## Parallel Execution Groups
-
-| Wave | Tasks | Can Start When |
-|------|-------|----------------|
-| 1 | T1, T2 | Immediately |
-| 2 | T3, T4 | Wave 1 complete |
-| 3 | T5 | T3, T4 complete |
-
-## Testing Strategy
-- [How to test]
-- [What to verify]
-
-## Risks & Mitigations
-- [What could go wrong + how to handle]
-```
-
-#### Write `plan.md` (Master Index)
-
-This is the **entry point** for execution skills. Include:
-
-```markdown
-# Plan Index: [Topic Name]
-
-**Generated**: YYYY-MM-DD HH:MM UTC
-**Plan Directory**: plans/YYYY-MM-DD-HH-MM-[topic-slug]/
-
-## plan_file Reference
-
-Full detailed plan: `plans/YYYY-MM-DD-HH-MM-[topic-slug]/phase-01-[summary].md`
-
-Execution skills should read the `plan_file` for complete task details.
-
-## Task Summary
-
-| ID | Name | Depends On | Location | Status |
-|----|------|-----------|----------|--------|
-| T1 | [Name] | [] | [files] | Not Completed |
-| T2 | [Name] | [] | [files] | Not Completed |
-| T3 | [Name] | [T1] | [files] | Not Completed |
+| ID | Name | Depends On | Location | Status | plan_file |
+|----|------|-----------|----------|--------|-----------|
+| T1 | [Name] | [] | [files] | Not Completed | plans/YYYY-MM-DD-HH-MM-[topic-slug]/phase-01-[summary].md |
+| T2 | [Name] | [] | [files] | Not Completed | plans/YYYY-MM-DD-HH-MM-[topic-slug]/phase-02-[summary].md |
+| T3 | [Name] | [T1] | [files] | Not Completed | plans/YYYY-MM-DD-HH-MM-[topic-slug]/phase-03-[summary].md |
 
 ## Parallel Execution Groups
 
@@ -177,7 +163,7 @@ To run: `/parallel-task plans/YYYY-MM-DD-HH-MM-[topic-slug]/plan.md`
 
 ### 5. Subagent Review
 
-After saving both files, spawn a subagent to review the plan:
+After saving all files, spawn a subagent to review the plan:
 
 ```
 Review this implementation plan for:
@@ -190,7 +176,7 @@ Provide specific, actionable feedback. Do not ask questions.
 
 Plan directory: [directory path]
 Plan index: [plan.md path]
-Detailed plan: [phase-01-[summary].md path]
+Phase files: [list of phase-NN-*.md paths]
 Context: [brief context about the task]
 ```
 
@@ -227,4 +213,5 @@ Tasks with empty/satisfied dependencies can run in parallel (T1, T2 above).
 - Always use Context7 for external dependencies before finalizing tasks
 - Always ask questions where ambiguity exists
 - Save to the timestamped directory structure, NOT a single file in CWD
-- The `plan_file` in `plan.md` points to the detailed phase plan for execution
+- Each task gets its own `phase-NN-[summary].md` file — never merge all tasks into one phase file
+- The `plan_file` column in `plan.md` per task points to the task's phase file for execution agents to read
